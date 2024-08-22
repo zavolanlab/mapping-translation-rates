@@ -14,10 +14,6 @@ from scipy.optimize import curve_fit, OptimizeWarning
 
 #file paths
 intensity_filename = "All_Pep_Centric_peptide_centric_12012024.csv"
-
-copy_numbers_filename = "HepG2_protein_copy_numbers.csv"
-protein_IDs_filename = "trscrpt_ENSEMBL_gene_HGNC_uniprot.tsv"
-
 time_cols_dict = { 0 : 'Log2Int_001_HP-0056_SLC_D23', \
 	10 : 'Log2Int_004_HP-0056_SLC_D23', \
 	30 : 'Log2Int_007_HP-0056_SLC_D23', \
@@ -27,8 +23,12 @@ time_cols_dict = { 0 : 'Log2Int_001_HP-0056_SLC_D23', \
 	360 : 'Log2Int_022_HP-0056_SLC_D23', \
 	480 : 'Log2Int_025_HP-0056_SLC_D23', \
 	660 : 'Log2Int_028_HP-0056_SLC_D23' }
-
 replicate_ID = "rep1"
+
+copy_numbers_filename = "HepG2_protein_copy_numbers.csv"
+copy_number_columns = ['Averagecopy number H1','Averagecopy number H2','Averagecopy number H3']
+
+protein_IDs_filename = "trscrpt_ENSEMBL_gene_HGNC_uniprot.tsv"
 
 t_d = []
 I_d = []
@@ -158,7 +158,7 @@ df_protein_rates.to_csv('protein_buildup_rates_tidy_'+replicate_ID+'.tsv',sep='\
 
 #load file with protein copy numbers
 print('Normalize by protein abundance')
-df_protein_copy_numbers = pd.read_csv(copy_numbers_filename,usecols=['Gene names','Averagecopy number H1','Averagecopy number H2','Averagecopy number H3'],decimal=",")
+df_protein_copy_numbers = pd.read_csv(copy_numbers_filename,usecols=['Gene names',*copy_number_columns],decimal=",")
 
 #remove duplicates
 df_protein_copy_numbers = df_protein_copy_numbers.groupby('Gene names').mean().reset_index()
@@ -171,10 +171,10 @@ translate_df = translate_df.drop_duplicates(subset=['swissprot_id'],keep='first'
 
 #merge with translator df
 df_protein_copy_numbers = pd.merge(df_protein_copy_numbers,translate_df,left_on="Gene names",right_on="HGNC_gene_symbol")
-df_protein_copy_numbers = df_protein_copy_numbers[['swissprot_id','HGNC_gene_symbol','ensembl_gene_id','Averagecopy number H1','Averagecopy number H2','Averagecopy number H3']]
+df_protein_copy_numbers = df_protein_copy_numbers[['swissprot_id','HGNC_gene_symbol','ensembl_gene_id',*copy_number_columns]]
 
 #compute average protein copy numbers
-df_protein_copy_numbers = avg_prot_copy(df_protein_copy_numbers,['Averagecopy number H1','Averagecopy number H2','Averagecopy number H3'])
+df_protein_copy_numbers = avg_prot_copy(df_protein_copy_numbers,copy_number_columns)
 
 #merge with synthesis rates
 df_protein_rates = pd.merge(df_protein_rates,df_protein_copy_numbers,left_on="protein_ID",right_on="swissprot_id")
