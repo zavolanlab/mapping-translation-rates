@@ -30,6 +30,34 @@ Computationally, we extract mappings to exons with Rsubread for our initial coun
 
 This method is superior to just computing the weighted average of ribosomes per gene, since it is not intrinsically limited to the maximum fraction that you can resolve (10 in our case).
 
+
+## Global translation elongation rates from runoff ribosome profiling
+Global translation elongation rates can be determined from metagene-ribosome profiles via the SL method (Ingolia *et. al.*. 2011. “Ribosome Profiling of Mouse Embryonic Stem Cells Reveals the Complexity and Dynamics of Mammalian Proteomes.” Cell 147 (4)). To this end, the folder ```runoff_riboseq```contains two python scripts: ```depletion_curves.py``` creates a plot of ribosome depletion curves characteristic to harringtonine + cycloheximide treatment, ```SL_determination_fit.py``` extracts global elongation speeds from these curves.
+
+### Input depletion_curves.py
+This script needs two kinds of input files and a couple of parameters:
+1. a .tsv file with the CDS coordinates on the transcriptome, transcript ID and gene ID
+2. a dictionary with time differences between HRT and CHX application, and the corresponding (.sam/.bam) mapping files together with .json files with the p-site offset estimations
+3. the minimum length of the transcripts contributing to the metagene plot (3000nt in Ingolia *et. al.*)
+4. the binsize (in nts) over which the coverage is averaged (5codons = 15nts in Ingolia *et. al.*)
+5. the size of the plateau at the end of the profile (in nts, 600 in the original publication)
+
+### Procedure depletion_curves.py
+After reading the coordinate file, the script reads the mapping files and constructs the riboseq profiles at different time separations between application of harringtonine and cycloheximide. These curves are plotted and saved into a text file
+
+### Procedure SL_determination_fit.py
+An arbitrary amount of these text files serve as a starting point for the determination of the elongation speed with the SL method.
+The procedure for each single one of these files is:
+1. the input files are read, the starting locations (where t > 0 curve / t = 0 curve passes 0.5 for the first time from below) are determined
+2. a straight line is fitted through the starting locations at different t > 0
+3. data and fit line are added to an overall plot
+
+### Outputs
+The joint output of these two scripts are:
+1. text files containing depletion curves from every analyzed time course
+2. .pdf files with plots of these depletion curves (one per time course)
+3. .pdf file with linear fits (one file in total)
+
 ## Protein synthesis rates from pSILAC
 The script ```differential_protein_synthesis.py``` performs the analysis of pSILAC data.
 
