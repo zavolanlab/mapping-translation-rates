@@ -87,3 +87,6 @@ The code generates output .tsv files at different stages:
 3. protein buildup rates: peptide buildup rates averaged over (tidy) peptides corresponding to the same protein (swissprot id, rate, spread over which the different peptide estimates going into the rate range)
 4. protein synthesis rates: buildup rates normalized by protein abundance per cell (swissprot id, HGNC gene symbo, ensembl gene id, protein copy number per cell averaged over replicates, protein synthesis rate, spread of the protein synthesis rate)
 
+# License
+The code is published under the MIT license.
+

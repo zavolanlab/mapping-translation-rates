@@ -6,7 +6,6 @@ import os
 import gc
 import pysam
 import json
-import math
 import statistics
 import warnings
 from scipy.optimize import curve_fit, OptimizeWarning
