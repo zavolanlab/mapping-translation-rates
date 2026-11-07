@@ -87,6 +87,33 @@ The code generates output .tsv files at different stages:
 3. protein buildup rates: peptide buildup rates averaged over (tidy) peptides corresponding to the same protein (swissprot id, rate, spread over which the different peptide estimates going into the rate range)
 4. protein synthesis rates: buildup rates normalized by protein abundance per cell (swissprot id, HGNC gene symbo, ensembl gene id, protein copy number per cell averaged over replicates, protein synthesis rate, spread of the protein synthesis rate)
 
+## Note on the polysome-profiling script (November 2026)
+
+The committed version of `polysome_profiling/polysome_analysis_model_RL_pool.py` (commit 93bdb71,
+22 August 2024) was not the final version used to generate the mean ribosome loads deposited with the paper
+(Zenodo 10.5281/zenodo.15858175, master table). 
+
+The Methods state that the number of molecules of transcript *i* in fraction *k* is obtained from its TPM as
+M_i^k = TPM_i^k · S / TPM_s^k, i.e. by dividing by the spike-in TPM of that fraction. The committed script divided
+instead by the sum over spike-ins *and* endogenous genes.  The deposited values were produced with the
+spike-in-only denominator, which the script now uses.
+
+Furthermore, the script keeps only genes present in `gene_id_transcript_id.tsv` and `transcriptome.fa`, so the
+spike-ins (ERCC and SIRV, SIRV-Set 3)  must be included in both files; the script now stops with an
+explanatory message if they are absent.
+
+Two tests are also included in `polysome_profiling/tests/`: `test_synthetic.py` generates counts from the
+model of the Methods with known mean ribosome loads and requires the script to recover them and to be
+invariant to sequencing depth and column order (no data needed; `python -m pytest polysome_profiling/tests`),
+and `test_reproduces_master_table.py` compares the output with the published table when `MRL_DATA_DIR`
+points to the inputs. Run both before changing the script.
+
+The published results are unaffected: they were computed as described in the Methods.
+
+Note on the input formats: `gene_id_transcript_id.tsv` is read without a header (two tab-separated columns,
+gene ID then transcript ID); the transcript FASTA must contain one transcript per gene and the spike-in
+sequences, with `CDS=start-end` as the last word of the header of protein-coding transcripts.
+
 # License
 The code is published under the MIT license.
 

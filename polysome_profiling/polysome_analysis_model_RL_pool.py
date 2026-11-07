@@ -84,10 +84,17 @@ def compute_frequencies(df):
     spikein_df = normalized_df[~normalized_df.index.str.startswith("ENSG")]  #split
     pc_df = normalized_df[normalized_df.index.str.startswith("ENSG")]
 
-    spikein_norm_df = spikein_df.sum()  # compute normalization dfs
-    pc_norm_df = pc_df.sum()
+    if len(spikein_df) == 0:
+        raise ValueError("no spike-in rows after merging with the transcript table: "
+                         "the spike-ins must be present in gene_id_transcript_id.tsv and transcriptome.fa, "
+                         "because the per-fraction normalization uses the spike-in TPM (Methods, M_i^k = TPM_i^k * S / TPM_s^k)")
+    if (spikein_df.sum() == 0).any():
+        raise ValueError("zero spike-in reads in fraction(s) " + ", ".join(spikein_df.columns[spikein_df.sum() == 0]))
 
-    frequencies = pc_df.div(spikein_norm_df.add(pc_norm_df, axis=0), axis=1)
+    spikein_norm_df = spikein_df.sum()  # per-fraction spike-in sum (the same amount of spike-in was added to each fraction)
+
+    # Methods: M_i^k = TPM_i^k * S / TPM_s^k  ->  proportional to  (counts_i^k / L_i) / sum over spike-ins of (counts_s^k / L_s)
+    frequencies = pc_df.div(spikein_norm_df, axis=1)
 
     frequencies.reset_index(names=['gene_ID'], inplace=True)
 
@@ -139,9 +146,9 @@ def chisqred(fit_func, p, x, y, dy):
 
 '''
 compute ribosome load
-via fitting a binomial distribution
+via fitting a Poisson distribution (first moment = mean ribosome load)
 from input frequency series
-assumes standard error of 0.01 for frequencies
+assumes standard error of 0.01 for frequencies (used only for the relative chi^2)
 '''
 def compute_model_fit_RL(df):
     norm = df[heavy_fract+'_pooled']
